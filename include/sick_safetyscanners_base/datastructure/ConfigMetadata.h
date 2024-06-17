@@ -35,6 +35,7 @@
 #ifndef SICK_SAFETYSCANNERS_BASE_DATASTRUCTURE_CONFIGMETADATA_H
 #define SICK_SAFETYSCANNERS_BASE_DATASTRUCTURE_CONFIGMETADATA_H
 
+#include <cstdint>
 #include <iostream>
 #include <vector>
 

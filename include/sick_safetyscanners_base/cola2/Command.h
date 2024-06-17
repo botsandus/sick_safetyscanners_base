@@ -35,6 +35,7 @@
 #ifndef SICK_SAFETYSCANNERS_BASE_COLA2_COMMAND_H
 #define SICK_SAFETYSCANNERS_BASE_COLA2_COMMAND_H
 
+#include <cstdint>
 #include <vector>
 
 #include "sick_safetyscanners_base/datastructure/PacketBuffer.h"

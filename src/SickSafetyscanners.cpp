@@ -51,7 +51,7 @@ SickSafetyscannersBase::SickSafetyscannersBase(sick::types::ip_address_t sensor_
   , m_io_service(*m_io_service_ptr)
   , m_udp_client(m_io_service, comm_settings.host_udp_port)
   , m_session(
-      std::move(sick::make_unique<sick::communication::TCPClient>(m_sensor_ip, sensor_tcp_port)))
+      sick::make_unique<sick::communication::TCPClient>(m_sensor_ip, sensor_tcp_port))
   , m_packet_merger()
 {
   changeSensorSettings(comm_settings);
@@ -68,7 +68,7 @@ SickSafetyscannersBase::SickSafetyscannersBase(sick::types::ip_address_t sensor_
   , m_io_service(*m_io_service_ptr)
   , m_udp_client(m_io_service, comm_settings.host_udp_port, comm_settings.host_ip, interface_ip)
   , m_session(
-      std::move(sick::make_unique<sick::communication::TCPClient>(m_sensor_ip, sensor_tcp_port)))
+      sick::make_unique<sick::communication::TCPClient>(m_sensor_ip, sensor_tcp_port))
   , m_packet_merger()
 {
   changeSensorSettings(comm_settings);
@@ -85,7 +85,7 @@ SickSafetyscannersBase::SickSafetyscannersBase(sick::types::ip_address_t sensor_
   , m_io_service(io_service)
   , m_udp_client(m_io_service, comm_settings.host_udp_port)
   , m_session(
-      std::move(sick::make_unique<sick::communication::TCPClient>(m_sensor_ip, sensor_tcp_port)))
+      sick::make_unique<sick::communication::TCPClient>(m_sensor_ip, sensor_tcp_port))
   , m_packet_merger()
 {
   changeSensorSettings(comm_settings);

@@ -35,6 +35,7 @@
 #ifndef SICK_SAFETYSCANNERS_BASE_DATASTRUCTURE_TYPECODE_H
 #define SICK_SAFETYSCANNERS_BASE_DATASTRUCTURE_TYPECODE_H
 
+#include <cstdint>
 #include <iostream>
 
 namespace sick {
