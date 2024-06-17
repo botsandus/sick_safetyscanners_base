@@ -45,6 +45,7 @@
 #include "sick_safetyscanners_base/data_processing/ReadWriteHelper.hpp"
 
 #include <boost/thread/mutex.hpp>
+#include <cstdint>
 
 namespace sick {
 namespace cola2 {

@@ -39,6 +39,7 @@
 #define SICK_SAFETYSCANNERS_BASE_SICKSAFETYSCANNERS_H
 
 #include <chrono>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
