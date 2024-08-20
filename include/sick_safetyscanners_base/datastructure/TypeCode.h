@@ -37,6 +37,8 @@
 
 #include <cstdint>
 #include <iostream>
+#include <string>
+
 
 namespace sick {
 namespace datastructure {
