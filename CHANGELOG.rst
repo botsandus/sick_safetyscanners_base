@@ -2,8 +2,8 @@
 Changelog for package sick_safetyscanners_base
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.3 (2024-08-20)
+------------------
 * Adding missing includes for ubuntu24 compiler
 * Adding dependencies on specific boost libraries, exporting dep to chrono
 * Fix Sync example
