@@ -38,6 +38,7 @@
 #include "sick_safetyscanners_base/datastructure/Data.h"
 #include "sick_safetyscanners_base/datastructure/PacketBuffer.h"
 #include <boost/asio/ip/address_v4.hpp>
+#include <chrono>
 #include <functional>
 #include <memory>
 
@@ -72,7 +73,7 @@ using port_t = uint16_t;
  * \brief Type alias for the currently used.
  *
  */
-using time_duration_t = boost::posix_time::time_duration;
+using time_duration_t = std::chrono::steady_clock::duration;
 
 /*!
  * \brief Type alias for the sensor feature flags.
