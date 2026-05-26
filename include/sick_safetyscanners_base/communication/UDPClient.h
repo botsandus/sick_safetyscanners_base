@@ -144,7 +144,7 @@ private:
   boost::asio::ip::udp::socket m_socket;
   types::PacketHandler m_packet_handler;
   datastructure::PacketBuffer::ArrayBuffer m_recv_buffer;
-  boost::asio::deadline_timer m_deadline;
+  boost::asio::steady_timer m_deadline;
 
   /*!
    * \brief A function to check internal deadline constraints on connect, receive and send

@@ -419,7 +419,7 @@ public:
    * \param timeout Timeout in [seconds].
    * \return const Data Returned sensor data.
    */
-  const Data receive(sick::types::time_duration_t timeout = boost::posix_time::pos_infin);
+  const Data receive(sick::types::time_duration_t timeout = sick::types::time_duration_t::max());
 };
 } // namespace sick
 

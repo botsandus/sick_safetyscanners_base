@@ -88,7 +88,7 @@ public:
    * timeout limit but guarantees the synchronous send/receive operations not to wait forever.
    */
   void sendCommand(Command& cmd,
-                   sick::types::time_duration_t timeout = boost::posix_time::seconds(5));
+                   sick::types::time_duration_t timeout = std::chrono::seconds(5));
 
   /*!
    * \brief Get the current session ID, if available.
