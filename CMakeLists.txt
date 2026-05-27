@@ -12,7 +12,7 @@ add_definitions(-Wall -Werror)
 
 ## Find system libraries
 set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost REQUIRED MODULE COMPONENTS thread chrono system)
+find_package(Boost REQUIRED MODULE COMPONENTS thread chrono)
 
 
 ###########
