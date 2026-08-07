@@ -124,6 +124,23 @@ public:
    */
   void close();
 
+  /*!
+   * \brief Indicates whether a COLA2 session is currently opened.
+   *
+   * \return true The COLA2 session is open.
+   * \return false The COLA2 session is closed.
+   */
+  bool isOpen() const;
+
+  /*!
+   * \brief Drops the TCP connection without sending a CloseSession telegram.
+   *
+   * Use after a command timed out or mis-parsed: the socket may hold a stale
+   * reply, so a graceful close() could hang or desync the next command. The
+   * sensor reaps the abandoned session via its heartbeat timeout.
+   */
+  void abort();
+
 private:
   uint16_t m_request_id;
   boost::optional<uint32_t> m_session_id;
@@ -136,14 +153,6 @@ private:
    * \param cmd The command to be processed.
    */
   void assembleAndSendTelegram(Command& cmd);
-
-  /*!
-   * \brief Indicates whether a COLA2 session is currently opened.
-   *
-   * \return true The COLA2 session is open.
-   * \return false The COLA2 session is closed.
-   */
-  bool isOpen() const;
 
   /*!
    * \brief Assembles a packetBuffer object by merging TCP packets from one or multiple response
