@@ -137,8 +137,60 @@ public:
   /*!
    * \brief Changes the internal settings of the sensor.
    * \param settings New set of settings to pass to the sensor.
+   *
+   * The sensor's current data-output configuration is read first and the
+   * write is skipped when it already matches: nanoScan3 firmware (observed on
+   * R01.94) accumulates an internal fault (0xE2060016) under repeated Cola2
+   * traffic, so every avoidable telegram counts.
    */
   void changeSensorSettings(const CommSettings& settings);
+
+  /*!
+   * \brief Requests the current (volatile) data-output configuration of
+   * channel 0 from the sensor.
+   * \param config_data Returned current configuration data.
+   */
+  void requestCurrentConfig(ConfigData& config_data);
+
+  /*!
+   * \brief Keeps one Cola2 session open across several request/change calls.
+   *
+   * Each command normally opens and closes its own TCP connection + Cola2
+   * session. The nanoScan3 tolerates only a finite number of session
+   * open/close cycles before its data output wedges (internal error
+   * 0xE2060016), so grouping the startup commands into a single session
+   * materially extends sensor life. Non-copyable; closes the session on
+   * destruction.
+   */
+  class SessionBatch
+  {
+  public:
+    explicit SessionBatch(SickSafetyscannersBase& device)
+      : m_device(device)
+    {
+      m_device.m_batch_depth++;
+    }
+    SessionBatch(const SessionBatch&) = delete;
+    SessionBatch& operator=(const SessionBatch&) = delete;
+    ~SessionBatch()
+    {
+      m_device.m_batch_depth--;
+      if (m_device.m_batch_depth == 0 && m_device.m_session.isOpen())
+      {
+        try
+        {
+          m_device.m_session.close();
+        }
+        catch (...)
+        {
+          // Closing is best-effort; the session also expires sensor-side.
+        }
+      }
+    }
+
+  private:
+    SickSafetyscannersBase& m_device;
+  };
 
   /**
    * \brief Requests the typecode of the sensor.
@@ -264,9 +316,20 @@ private:
   sick::types::ip_address_t m_sensor_ip;
   CommSettings m_comm_settings;
   std::unique_ptr<boost::asio::io_context> m_io_service_ptr;
+  int m_batch_depth{0};
+
+  /*!
+   * \brief Returns true when the sensor's current channel-0 configuration
+   * already matches \p settings, i.e. the ChangeCommSettings write can be
+   * skipped.
+   */
+  bool isConfigAlreadyApplied(const CommSettings& settings);
 
   /*!
    * \brief Helper function to create command objects generically.
+   *
+   * Inside a SessionBatch the session is opened on first use and kept open;
+   * otherwise each command runs in its own session as before.
    *
    * 	param CommandT The command-object type.
    * 	param Args Argument list type.
@@ -275,10 +338,16 @@ private:
   template <class CommandT, typename... Args>
   void inline createAndExecuteCommand(Args&&... args)
   {
-    m_session.open();
+    if (!m_session.isOpen())
+    {
+      m_session.open();
+    }
     CommandT cmd(std::forward<Args>(args)...);
     m_session.sendCommand(cmd);
-    m_session.close();
+    if (m_batch_depth == 0)
+    {
+      m_session.close();
+    }
   }
 
 protected:

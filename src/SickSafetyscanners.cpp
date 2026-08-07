@@ -37,6 +37,7 @@
 #include "sick_safetyscanners_base/SickSafetyscanners.h"
 #include "sick_safetyscanners_base/cola2/Cola2.h"
 #include <chrono>
+#include <cmath>
 #include <utility>
 
 namespace sick {
@@ -52,7 +53,11 @@ SickSafetyscannersBase::SickSafetyscannersBase(sick::types::ip_address_t sensor_
   , m_session(sick::make_unique<sick::communication::TCPClient>(m_sensor_ip, sensor_tcp_port))
   , m_packet_merger()
 {
-  changeSensorSettings(comm_settings);
+  // Intentionally no changeSensorSettings() here: the settings are written
+  // (only if they differ from the sensor's current config) when the consumer
+  // starts communication. The nanoScan3 wedges its data output (internal
+  // error 0xE2060016) after a few thousand Cola2 sessions, so startup traffic
+  // is kept minimal.
 }
 
 SickSafetyscannersBase::SickSafetyscannersBase(sick::types::ip_address_t sensor_ip,
@@ -67,7 +72,6 @@ SickSafetyscannersBase::SickSafetyscannersBase(sick::types::ip_address_t sensor_
   , m_session(sick::make_unique<sick::communication::TCPClient>(m_sensor_ip, sensor_tcp_port))
   , m_packet_merger()
 {
-  changeSensorSettings(comm_settings);
 }
 
 SickSafetyscannersBase::SickSafetyscannersBase(sick::types::ip_address_t sensor_ip,
@@ -82,15 +86,54 @@ SickSafetyscannersBase::SickSafetyscannersBase(sick::types::ip_address_t sensor_
   , m_session(sick::make_unique<sick::communication::TCPClient>(m_sensor_ip, sensor_tcp_port))
   , m_packet_merger()
 {
-  changeSensorSettings(comm_settings);
 }
 
+
+bool SickSafetyscannersBase::isConfigAlreadyApplied(const CommSettings& settings)
+{
+  if (settings.channel != 0)
+  {
+    // The current-config variable only exposes channel 0.
+    return false;
+  }
+  try
+  {
+    sick::datastructure::ConfigData current;
+    createAndExecuteCommand<cola2::MeasurementCurrentConfigVariableCommand>(m_session, current);
+    // Angles cross the wire as int32 in 1/4194304-degree steps; a small
+    // epsilon absorbs the float round trip through ConfigData.
+    const float angle_eps = 1e-3f;
+    return current.getEnabled() == settings.enabled &&
+           current.getHostIp() == settings.host_ip &&
+           current.getHostUdpPort() == settings.host_udp_port &&
+           current.getPublishingFrequency() == settings.publishing_frequency &&
+           current.getFeatures() == static_cast<uint16_t>(settings.features) &&
+           std::abs(current.getStartAngle() - settings.start_angle) < angle_eps &&
+           std::abs(current.getEndAngle() - settings.end_angle) < angle_eps;
+  }
+  catch (const std::exception& e)
+  {
+    LOG_WARN("Could not read current sensor configuration (%s); writing settings.", e.what());
+    return false;
+  }
+}
 
 void SickSafetyscannersBase::changeSensorSettings(const CommSettings& settings)
 {
   CommSettings _settings  = settings;
   _settings.host_udp_port = m_udp_client.getLocalPort();
+  SessionBatch batch(*this); // one session for the compare-read and the write
+  if (isConfigAlreadyApplied(_settings))
+  {
+    LOG_INFO("Sensor data-output settings unchanged, skipping ChangeCommSettings write");
+    return;
+  }
   createAndExecuteCommand<sick::cola2::ChangeCommSettingsCommand>(m_session, _settings);
+}
+
+void SickSafetyscannersBase::requestCurrentConfig(sick::datastructure::ConfigData& config_data)
+{
+  createAndExecuteCommand<cola2::MeasurementCurrentConfigVariableCommand>(m_session, config_data);
 }
 
 void SickSafetyscannersBase::findSensor(uint16_t blink_time)
@@ -113,6 +156,7 @@ void SickSafetyscannersBase::requestApplicationName(
 
 void SickSafetyscannersBase::requestFieldData(std::vector<sick::datastructure::FieldData>& fields)
 {
+  SessionBatch batch(*this); // up to 2*128 commands, keep them in one session
   for (int i = 0; i < 128; i++)
   {
     sick::datastructure::FieldData field_data;
@@ -133,6 +177,7 @@ void SickSafetyscannersBase::requestFieldData(std::vector<sick::datastructure::F
 void SickSafetyscannersBase::requestMonitoringCases(
   std::vector<sick::datastructure::MonitoringCaseData>& monitoring_cases)
 {
+  SessionBatch batch(*this); // up to 254 commands, keep them in one session
   for (int i = 0; i < 254; i++)
   {
     sick::datastructure::MonitoringCaseData monitoring_case_data;
