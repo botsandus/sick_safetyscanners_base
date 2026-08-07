@@ -88,6 +88,11 @@ bool Cola2Session::isOpen() const
   return m_tcp_client_ptr->isConnected();
 }
 
+void Cola2Session::abort()
+{
+  m_tcp_client_ptr->disconnect();
+}
+
 void Cola2Session::close()
 {
   if (!isOpen())

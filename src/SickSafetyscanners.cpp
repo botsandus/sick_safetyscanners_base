@@ -114,6 +114,10 @@ bool SickSafetyscannersBase::isConfigAlreadyApplied(const CommSettings& settings
   catch (const std::exception& e)
   {
     LOG_WARN("Could not read current sensor configuration (%s); writing settings.", e.what());
+    // A timed-out read can leave a late reply in the socket; drop the
+    // connection so the subsequent write starts from a clean one instead of
+    // parsing stale bytes.
+    m_session.abort();
     return false;
   }
 }

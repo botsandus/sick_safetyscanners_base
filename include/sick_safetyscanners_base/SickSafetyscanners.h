@@ -183,7 +183,10 @@ public:
         }
         catch (...)
         {
-          // Closing is best-effort; the session also expires sensor-side.
+          // Graceful close failed (e.g. socket desynced by an earlier
+          // timeout) — drop the TCP connection so no later command reuses
+          // it; the sensor reaps the session via its heartbeat timeout.
+          m_device.m_session.abort();
         }
       }
     }

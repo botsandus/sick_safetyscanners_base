@@ -132,6 +132,15 @@ public:
    */
   bool isOpen() const;
 
+  /*!
+   * \brief Drops the TCP connection without sending a CloseSession telegram.
+   *
+   * Use after a command timed out or mis-parsed: the socket may hold a stale
+   * reply, so a graceful close() could hang or desync the next command. The
+   * sensor reaps the abandoned session via its heartbeat timeout.
+   */
+  void abort();
+
 private:
   uint16_t m_request_id;
   boost::optional<uint32_t> m_session_id;
